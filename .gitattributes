@@ -1,0 +1,2 @@
+shopfront filter=lfs diff=lfs merge=lfs -text
+stockmanager filter=lfs diff=lfs merge=lfs -text
