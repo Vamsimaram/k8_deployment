@@ -1,118 +1,129 @@
-# docker-Java-kubernetes-project
+### Minikube Project 
+
+## Project Overview
+
+This project demonstrates how to set up a Kubernetes cluster using **Minikube** on an **Amazon Linux 2 EC2 instance**. The cluster will be used to deploy Java-based microservices, which are packaged into Docker containers. The project provides a complete guide to installing necessary tools such as **Docker**, **Maven**, **Java**, and **Git**, followed by building and deploying Docker images into Kubernetes.
+
+It focuses on the core concepts of **Kubernetes**, **Docker**, and **Java microservices**, enabling a full end-to-end deployment pipeline for a microservice architecture.
+
+## Project SetUp
+This document provides a step-by-step guide to setting up Minikube, Docker, Maven, Git, Java on an Amazon Linux 2 EC2 instance, and deploying a Java-based application using Docker and Kubernetes.
 
 
-INSTALL MINIKUBE 
-***********************************************************
+## Setup Instructions
 
-KUBECTL
-curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
-chmod +x ./kubectl
-mkdir -p $HOME/bin
-cp ./kubectl $HOME/bin/kubectl
-export PATH=$HOME/bin:$PATH
-echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
-source $HOME/.bashrc
-kubectl version --short --client
+## Step 1: Install Minikube and Docker on Amazon Linux 2 EC2
 
-DOCKER
+## Update the instance
+yum update -y
+
+## Install Docker
+amazon-linux-extras install docker
+
 yum install docker -y
-systemctl  start docker
+
+## Start Docker and enable it to run on boot
+systemctl start docker
+
 systemctl enable docker
 
-https://minikube.sigs.k8s.io/docs/start/
-***********************************************************
+## Install conntrack and Minikube
+yum install conntrack -y
+
+curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+## Start Minikube with Docker driver
+/usr/local/bin/minikube start --force --driver=docker
 
 
+## Step 2: Install Maven, Git, and Java
 
-INSTALL EKS SETUP
-#############################################################
-Step1: Take EC2 Instance with t2.MEDIUM instance type
-Step2: Create IAM Role with Admin policy for eks-cluster and attach to ec2-instance
-Step3: Install kubectl
+## Install Maven
+cd /opt/
 
-curl -o kubectl https://amazon-eks.s3-us-west-2.amazonaws.com/1.14.6/2019-08-22/bin/linux/amd64/kubectl
+wget https://dlcdn.apache.org/maven/maven-3/3.9.4/binaries/apache-maven-3.9.4-bin.tar.gz
+
+tar xvzf apache-maven-3.9.4-bin.tar.gz
+
+## Set up Maven environment variables
+vi /etc/profile.d/maven.sh
+## Add the following two lines:
+export MAVEN_HOME=/opt/apache-maven-3.9.4
+
+export PATH=$PATH:$MAVEN_HOME/bin
+## Save and exit
+source /etc/profile.d/maven.sh
+
+## Install Git
+yum install git -y
+
+## Install Java
+yum install java -y
+
+## Step 3: Install kubectl
+
+## Install kubectl
+curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.20.4/2021-04-12/bin/linux/amd64/kubectl
+
 chmod +x ./kubectl
+
 mkdir -p $HOME/bin
+
 cp ./kubectl $HOME/bin/kubectl
+
 export PATH=$HOME/bin:$PATH
+
 echo 'export PATH=$HOME/bin:$PATH' >> ~/.bashrc
+
 source $HOME/.bashrc
+
+## Verify kubectl installation
 kubectl version --short --client
 
-Step4: Install eksctl:
-curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
-sudo mv /tmp/eksctl /usr/bin
-eksctl version
+## Step 4: Clone the Project Repository
 
-Step5: MASTER Cluster creation:
-eksctl create cluster --name=eksdemo \
-                  --region=us-west-1 \
-                  --zones=us-west-1b,us-west-1c \
-                  --without-nodegroup 
+## Clone the GitHub repository for the project
+git clone https://github.com/Vamsimaram/k8_deployment.git
 
-Step6: Add Iam-Oidc-Providers:
-eksctl utils associate-iam-oidc-provider \
-    --region us-west-1 \
-    --cluster eksdemo \
-    --approve 
+## Step 5: Build and Push Docker Images for Java Services
 
-Allowing the service to connect with EKS
+Build and push the images for 3 Java services (shopfront, productcatalogue, stockmanager)
 
+## Service 1 - Shopfront
+cd kubernetes/shopfront/
 
-Step7: WORKER NODE Create node-group:
-eksctl create nodegroup --cluster=eksdemo \
-                   --region=us-west-1 \
-                   --name=eksdemo-ng-public \
-                   --node-type=t2.medium \
-                   --nodes=2 \
-                   --nodes-min=2 \
-                   --nodes-max=4 \
-                   --node-volume-size=10 \
-                   --ssh-access \
-                   --ssh-public-key=Praveen-test \
-                   --managed \
-                   --asg-access \
-                   --external-dns-access \
-                   --full-ecr-access \
-                   --appmesh-access \
-                   --alb-ingress-access	
+mvn clean install -DskipTests
 
+docker build -t vmaram9/shopfront:latest .
 
- 
-//eksctl delete nodegroup --cluster=eksdemo --region=us-east-1 --name=eksdemo-ng-public
+docker login
 
+docker push vmaram9/shopfront:latest
 
+## Service 2 - Product Catalogue
+cd ../productcatalogue/
 
-//eksctl delete cluster --name=eksdemo    --region=us-west-1	
+mvn clean install -DskipTests
 
+docker build -t vmaram9/productcatalogue:latest .
 
+docker push vmaram9/productcatalogue:latest
 
+## Service 3 - Stock Manager
+cd ../stockmanager/
 
-#############################################################
+mvn clean install -DskipTests
 
+docker build -t vmaram9/stockmanager:latest .
 
-HANDSON
+docker push vmaram9/stockmanager:latest
 
+## Step 6: Deploy Services to Kubernetes
 
-Deploying Java Applications with Docker and Kubernetes
-
-1) Build each project ->> mvn clean install -DskipTests
-
-2) Create docker hub account
-
-3) Build the image in local -> docker build -t praveensingam1994/shopfront:latest .
-
-docker build -t praveensingam1994/productcatalogue:latest .
-
-docker build -t praveensingam1994/stockmanager:latest .
-
-4) Push the image to your docker hub -> docker push praveensingam1994/shopfront:latest 
-
-docker push praveensingam1994/productcatalogue:latest
-
-docker push praveensingam1994/stockmanager:latest
-
-5) Go to kubernetes folder and create the pods -> 
+## Deploy the services using kubectl
+cd ../kubernetes/
 
 kubectl apply -f shopfront-service.yaml
 
@@ -120,20 +131,49 @@ kubectl apply -f productcatalogue-service.yaml
 
 kubectl apply -f stockmanager-service.yaml
 
-6) minikube service servicename  -> 
+## Step 7: Verify the Pods
 
-minikube service shopfront
-minikube service productcatalogue
-minikube service stockmanager
+## Check if all pods are running
+kubectl get pods
 
-7) Hit the url in browser -> 
+## Step 8: Start Kubernetes Dashboard
 
-ORDER TO BUILD AND DEPLOY 
+## Start the Minikube Kubernetes dashboard
+/usr/local/bin/minikube dashboard
 
-shopfront -> productcatalogue -> stockmanager
+## Step 9: Set Up Proxy and Open Dashboard
 
-Endpoint for product --> /products
-Endpoint for stock --> /stocks
+## Open a new EC2 terminal window and set up the proxy
+kubectl proxy --address='0.0.0.0' --accept-hosts='^*$'
+## Ensure EC2 security group allows traffic from all IPs and all traffic
 
+## Open the Kubernetes dashboard in the browser
+http://<EC2-IP>:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/#/pod?namespace=default
+
+## Step 10: Port Forward the Services
+
+## Forward the services to different ports on EC2
+
+## For Shopfront
+kubectl port-forward --address 0.0.0.0 svc/shopfront 8080:8010
+
+## For Product Catalogue
+kubectl port-forward --address 0.0.0.0 svc/productcatalogue 8090:8020
+
+## For Stock Manager
+kubectl port-forward --address 0.0.0.0 svc/stockmanager 9008:8030
+
+## Step 11: Access the Applications
+
+Access the applications via browser
+
+## Product Catalogue:
+http://<EC2-IP>:8090/product
+
+## Stock Manager:
+http://<EC2-IP>:9008/stocks
+
+## Step 12: Analyze the Kubernetes Dashboard
+# Explore the Kubernetes dashboard to view pods, services, and deployments.
 
 
