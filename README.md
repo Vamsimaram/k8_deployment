@@ -133,47 +133,47 @@ kubectl apply -f stockmanager-service.yaml
 
 ## Step 7: Verify the Pods
 
-## Check if all pods are running
+### Check if all pods are running
 kubectl get pods
 
 ## Step 8: Start Kubernetes Dashboard
 
-## Start the Minikube Kubernetes dashboard
+### Start the Minikube Kubernetes dashboard
 /usr/local/bin/minikube dashboard
 
 ## Step 9: Set Up Proxy and Open Dashboard
 
-## Open a new EC2 terminal window and set up the proxy
+### Open a new EC2 terminal window and set up the proxy
 kubectl proxy --address='0.0.0.0' --accept-hosts='^*$'
-## Ensure EC2 security group allows traffic from all IPs and all traffic
+### Ensure EC2 security group allows traffic from all IPs and all traffic
 
-## Open the Kubernetes dashboard in the browser
+### Open the Kubernetes dashboard in the browser
 http://<EC2-IP>:8001/api/v1/namespaces/kubernetes-dashboard/services/http:kubernetes-dashboard:/proxy/#/pod?namespace=default
 
 ## Step 10: Port Forward the Services
 
-## Forward the services to different ports on EC2
+### Forward the services to different ports on EC2
 
-## For Shopfront
+### For Shopfront
 kubectl port-forward --address 0.0.0.0 svc/shopfront 8080:8010
 
-## For Product Catalogue
+### For Product Catalogue
 kubectl port-forward --address 0.0.0.0 svc/productcatalogue 8090:8020
 
-## For Stock Manager
+### For Stock Manager
 kubectl port-forward --address 0.0.0.0 svc/stockmanager 9008:8030
 
 ## Step 11: Access the Applications
 
 Access the applications via browser
 
-## Product Catalogue:
+### Product Catalogue:
 http://<EC2-IP>:8090/product
 
-## Stock Manager:
+### Stock Manager:
 http://<EC2-IP>:9008/stocks
 
 ## Step 12: Analyze the Kubernetes Dashboard
-# Explore the Kubernetes dashboard to view pods, services, and deployments.
+### Explore the Kubernetes dashboard to view pods, services, and deployments.
 
 
