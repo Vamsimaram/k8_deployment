@@ -174,6 +174,6 @@ http://<EC2-IP>:8090/product
 http://<EC2-IP>:9008/stocks
 
 ## Step 12: Analyze the Kubernetes Dashboard
-### Explore the Kubernetes dashboard to view pods, services, and deployments.
+The Kubernetes dashboard is with the "productcatalogue", "stockmanager", "shopfront" service deployments running on Minikube. All key resources—Deployment, Pod, and Replica Set—are operational, with one instance of each active. The dashboard provides options for managing the pod, such as viewing logs or executing commands.
 
 
